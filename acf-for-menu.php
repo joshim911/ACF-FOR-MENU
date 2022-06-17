@@ -1,14 +1,14 @@
 <?php
 /**
  * Plugin Name: Acf-For-Menu (GSP)
- * Plugin URI: https://www.facebook.com/dreambulider/
- * Description: Acf-For-Menu is a product of GSP. You set class in the menu items and then you can do what you need althogh We desing this plugin specially for setting fontAwesome Icon in the menu items
+ * Plugin URI: https://www.facebook.com/joshim911/
+ * Description: ACF-For-Menu is a product of GSP. You set class in the menu items and then you can do what you need althogh We desing this plugin specially for setting fontAwesome Icon in the menu items
  * Version: 1.0.0
- * Author: Joshim
+ * Author: GSP
  * Author URI: https://www.facebook.com/dreambulider/
  * Developer: Joshim
  * Developer URI: https://www.facebook.com/dreambulider/
- * Text Domain: GSP-ACF-Menu
+ * Text Domain: ACF-For-Menu-GSP
  * Domain Path: /languages
  *
  * License: GNU General Public License v3.0
@@ -26,6 +26,7 @@ class menu_modify_gsp {
     protected $acf_field_name = '';
     protected $checkAcfValue = false;
     protected $newMenu = '';
+    public $domain = 'ACF-For-Menu-GSP';
     
     public function __construct($field_name){
        add_filter('wp_nav_menu_objects', array($this, 'access_menu_data'), 10, 2); 
@@ -67,9 +68,9 @@ class menu_modify_gsp {
     function mobify_menu($items, $args){
         
         foreach($this->id as $i => $id){
-            echo $this->acf_field = get_field($this->acf_field_name,$this->id[$i]);
+             $this->acf_field = get_field($this->acf_field_name,$this->id[$i]);
             if( $i > 0 ){
-                $this->newMenu .='<li id="'.'menu-item-'.$this->id[$i].'" class="'.$this->li_class[$i].'"><a href="'.$this->url[$i].'">'.$this->title[$i].'</a></li>';
+                $this->newMenu .='<li id="'.'menu-item-'.$this->id[$i].'" class="'.$this->li_class[$i].'"><i class="'.$this->acf_field.'"></i><a href="'.$this->url[$i].'">'.$this->title[$i].'</a></li>';
             }
             
             if(get_field($this->acf_field_name,$this->id[$i])){
