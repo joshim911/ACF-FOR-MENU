@@ -23,22 +23,29 @@ class GSPMenuIcon
     {
         add_filter('wp_nav_menu_objects', array($this, 'access_menu_data'), 10, 2);
         add_filter('wp_nav_menu_items', array($this, 'mobify_menu'), 10, 2);
+        add_action( 'wp_head' , array( $this, 'style' ) );
     }
 
     public function access_menu_data($items, $args)
     {
-        $hasChild = '';
-        foreach ($items as $i => $item) {
+       
+        foreach ( $items as $item ) {
 
-            $this->id[$i] = $item->ID;
-            $this->title[$i] = $item->title;
-            $this->url[$i] = $item->url;
-
+            array_push( $this->id, $item->ID );
+            array_push( $this->title, $item->title );
+            array_push( $this->url, $item->url );
+            
+          
             $this->class_data = null;
-            $hasChild = '';
             // access the menu classes and store all class in the "li_class" array
             foreach ($item->classes as $class) {
-                $this->class_data .= " " . $class;
+                
+                if( empty($this->class_data) ){
+                    $this->class_data = $class;
+                }else{
+                    $this->class_data .= ' ' . $class;
+                }
+                
                 $gsp = str_split($class);
 
                 if (
@@ -48,20 +55,25 @@ class GSPMenuIcon
                 ) {
 
                     $this->checkAcfValue = true;
-                    array_push($this->icon_classes, [$this->id[$i], $class]);
-                }
-
-                if ($class == 'menu-item-has-children') {
-                    $hasChild = 'hasChild';
+                    array_push($this->icon_classes, [$class, $item->ID]);
                 }
             }
 
-            $this->li_class[$i] = $this->class_data;
-            array_push($this->hasChild, $hasChild );
-            
+            // store all the the classess of a menu item in this array
+            array_push( $this->li_class, $this->class_data );
+        
+
+            // identify, the menu item has sub-menu  or not.
+            if ( in_array( 'menu-item-has-children' , $item->classes ) ) {
+                $this->checkAcfValue = true;
+                array_push($this->hasChild, [ "hasChild" , $item->ID ] );
+            }else{
+                array_push($this->hasChild, [ "noChild" , $item->ID ] );
+            }
+               
         }
 
-        print_r($this->hasChild);
+       
         return $items;
     }
 
@@ -69,21 +81,43 @@ class GSPMenuIcon
     function mobify_menu($items, $args)
     {
 
-        if (!$this->checkAcfValue) {
+        if ( ! $this->checkAcfValue) {
             return $items;
         }
 
-        foreach ($this->id as $i => $id) {
+        for( $i=0; $i < count($this->id); $i++ ) {
 
-            if( $this->hasChild[$i] == 'hasChild' ){
-                $this->newMenu .= '<li id="' . 'menu-item-' . $id . '" class="' . $this->li_class[$i] . '"><i class="bi bi-android2"></i><a href="' . $this->url[$i] . '">' . $this->title[$i] . '</a></li>';
+           
+            if( $this->hasChild[$i][0] == 'hasChild' ){
+           
+                $this->newMenu .= '<li id="' . 'menu-item-' . $this->id[$i] . '" class="d-flex ' . $this->li_class[$i] . '"><i class="'.$this->icon_classes[$i].'"></i><a href="' . $this->url[$i] . '">' . $this->title[$i] . '</a><i class="fa-solid fa-angle-down"></i></li>';
             }else{
-                $this->newMenu .= '<li id="' . 'menu-item-' . $id . '" class="' . $this->li_class[$i] . '"><i class="bi bi-android2"></i><a href="' . $this->url[$i] . '">' . $this->title[$i] . '</a></li>';
+                $this->newMenu .= '<li id="' . 'menu-item-' . $this->id[$i] . '" class="' . $this->li_class[$i] . '"><i class="'.$this->icon_classes[$i].'"></i><a href="' . $this->url[$i] . '">' . $this->title[$i] . '</a></li>';
             }
             
         }
 
         // if get one result from acf then will be returned new menu otherwise default will return
         return $this->newMenu;
+    }
+
+    function style()
+    {
+        ?>
+            <style>
+                .menu-item
+                {
+                    z-index: 100;
+                }
+                .menu-item i
+                {
+                    z-index: 150;
+                }
+                .menu-item a
+            {
+                width:100%;
+            }
+            </style>
+        <?php
     }
 }
