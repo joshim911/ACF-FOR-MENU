@@ -4,6 +4,10 @@ if (!defined('gspkit')) {
     define('gspkit', 'gspkit');
 }
 
+if ( ! defined( 'gspkiturl' ) ) {
+   define( 'gspkiturl', plugin_dir_url(__FILE__) );
+}
+
 class GSPMenuIcon
 {
 
@@ -21,23 +25,20 @@ class GSPMenuIcon
 
     function __construct()
     {
-        add_filter('wp_nav_menu_objects', array($this, 'access_menu_data'), 10, 2);
-        add_filter('wp_nav_menu_items', array($this, 'mobify_menu'), 10, 2);
-        add_action( 'wp_head' , array( $this, 'style' ) );
+        // add_filter('wp_nav_menu_objects', array($this, 'access_menu_data'), 10, 2);
+        
+        // add_filter('wp_nav_menu_items', array($this, 'mobify_menu'), 10, 2);
+        // add_action( 'wp_head' , array( $this, 'style' ) );
+        add_action( 'wp_enqueue_scripts', array( $this, 'scripts' ) );
     }
 
     public function access_menu_data($items, $args)
     {
        
         foreach ( $items as $item ) {
-
-            array_push( $this->id, $item->ID );
-            array_push( $this->title, $item->title );
-            array_push( $this->url, $item->url );
             
-          
-            $this->class_data = null;
-            // access the menu classes and store all class in the "li_class" array
+            array_push( $this->id, $item->ID );
+            
             foreach ($item->classes as $class) {
                 
                 if( empty($this->class_data) ){
@@ -73,24 +74,24 @@ class GSPMenuIcon
                
         }
 
-       
         return $items;
     }
 
 
     function mobify_menu($items, $args)
     {
+        
 
-        if ( ! $this->checkAcfValue) {
+        if ( ! $this->checkAcfValue) { 
             return $items;
         }
-
+        
         for( $i=0; $i < count($this->id); $i++ ) {
 
            
             if( $this->hasChild[$i][0] == 'hasChild' ){
-           
-                $this->newMenu .= '<li id="' . 'menu-item-' . $this->id[$i] . '" class="d-flex ' . $this->li_class[$i] . '"><i class="'.$this->icon_classes[$i].'"></i><a href="' . $this->url[$i] . '">' . $this->title[$i] . '</a><i class="fa-solid fa-angle-down"></i></li>';
+                
+                $this->newMenu .= '<li id="' . 'menu-item-' . $this->id[$i] . '" class="d-flex ' . $this->li_class[$i] . '"><i class="'.$this->icon_classes[$i].'"></i><a href="' . $this->url[$i] . '">' . $this->title[$i] . '</a><i class="has-child fa-solid fa-angle-down px-2"></i></li>';
             }else{
                 $this->newMenu .= '<li id="' . 'menu-item-' . $this->id[$i] . '" class="' . $this->li_class[$i] . '"><i class="'.$this->icon_classes[$i].'"></i><a href="' . $this->url[$i] . '">' . $this->title[$i] . '</a></li>';
             }
@@ -104,20 +105,34 @@ class GSPMenuIcon
     function style()
     {
         ?>
-            <style>
-                .menu-item
-                {
-                    z-index: 100;
-                }
-                .menu-item i
-                {
-                    z-index: 150;
-                }
-                .menu-item a
+        <style>
+
+            .down-arrow
             {
-                width:100%;
+                font-size: 100px; font-weight: bold;
+                position: relative;
             }
-            </style>
+
+            .menu-item-has-children a
+            {
+                width: 100%;
+            }
+            .has-child{
+            color: black;
+            }
+            .sub-menu
+            {
+                display: none;
+            }
+        </style>
         <?php
+
+    }
+
+    function scripts()
+    {
+        wp_enqueue_script( 'gspkitfun', gspkiturl . '/fun.js', array(), microtime(), true );
+        
+       
     }
 }
